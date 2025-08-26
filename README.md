@@ -81,19 +81,19 @@ The system will follow a simplified 3-tier architecture:
 
 - Courses
 
--- GET /courses → list all courses.
--- POST /courses → add new course.
--- PUT /courses/:id → update course.
--- DELETE /courses/:id → delete course.
+ - GET /courses → list all courses.
+ - POST /courses → add new course.
+ - PUT /courses/:id → update course.
+ - DELETE /courses/:id → delete course.
 
 ## Schedules
 
--- GET /courses/:id/schedules → list schedules for course.
--- POST /courses/:id/schedules → add schedule.
--- DELETE /schedules/:id → delete schedule.
+ - GET /courses/:id/schedules → list schedules for course.
+ - POST /courses/:id/schedules → add schedule.
+ - DELETE /schedules/:id → delete schedule.
 
 ## Assessments
 
--- GET /courses/:id/assessments → list assessments.
--- POST /courses/:id/assessments → add assessment.
--- DELETE /assessments/:id → delete assessment.
+ - GET /courses/:id/assessments → list assessments.
+ - POST /courses/:id/assessments → add assessment.
+ - DELETE /assessments/:id → delete assessment.
