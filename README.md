@@ -38,6 +38,6 @@ My starting idea is to use some tools I'm confortable with:
 
 ## Won’t Have (for MVP)
 
--Multi-user support (sharing, group schedules).
--Advanced analytics (e.g., workload prediction, semester performance).
--AI/ML recommendations.
+- Multi-user support (sharing, group schedules).
+- Advanced analytics (e.g., workload prediction, semester performance).
+- AI/ML recommendations.
