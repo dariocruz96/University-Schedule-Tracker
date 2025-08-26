@@ -34,7 +34,7 @@ My starting idea is to use some tools I'm confortable with:
 -Notifications/reminders for upcoming assessments.
 -Integration with Google Calendar or iCal export.
 -Grade tracking (add grades to assessments & calculate GPA).
--Dark mode / user customization of UI.
+-Dark mode / user customisation of UI.
 
 ## Won’t Have (for MVP)
 
