@@ -15,9 +15,7 @@ My starting idea is to use some tools I'm confortable with:
 - Database (SQLite or Postgres).
 
 # Requirements
-
 ## Must Have
-
 - Ability to add, edit, and delete courses (name, code, credits).
 - Ability to add, edit, and delete class schedules (day, time, location, linked to a course).
 - Ability to add, edit, and delete assessments (exam, assignment, project deadlines).
@@ -26,7 +24,6 @@ My starting idea is to use some tools I'm confortable with:
 - Persistent storage in a database (not just in memory).
 
 ## Should Have
-
 - Simple authentication (single user login with email/password).
 - Responsive web design (usable on desktop & mobile).
 - Basic search/filter for courses and assessments.
@@ -37,7 +34,6 @@ My starting idea is to use some tools I'm confortable with:
 - Dark mode / user customisation of UI.
 
 ## Won’t Have (for MVP)
-
 - Multi-user support (sharing, group schedules).
 - Advanced analytics (e.g., workload prediction, semester performance).
 - AI/ML recommendations.
@@ -53,19 +49,16 @@ The system will follow a simplified 3-tier architecture:
 - AJAX (fetch) calls to backend REST API for CRUD operations.
 
 ## Backend (Node.js + Express)
-
 - Provides REST API endpoints for courses, schedules, and assessments.
 - Serves static HTML, CSS, and JS files.
 - Handles authentication (simple JWT-based login).
 - Uses Prisma ORM to communicate with Postgres.
 
 ## Database (PostgreSQL)
-
 - Stores user, course, schedule, and assessment data.
 - Accessed via SQL queries instead of an ORM.
 
 ## Frontend Pages
-
 - login.html → Login form, POST to /login.
 - dashboard.html → Shows overview of courses + assessments.
 - courses.html → Form + table for course CRUD.
@@ -73,27 +66,22 @@ The system will follow a simplified 3-tier architecture:
 - assessments.html → Form + list of assessments (sorted by due date).
 
 ## Backend API Endpoints
-
 - Auth
-
--- POST /register → create user (hash password with bcrypt).
--- POST /login → login, returns JWT.
+  - POST /register → create user (hash password with bcrypt).
+  - POST /login → login, returns JWT.
 
 - Courses
-
   - GET /courses → list all courses.
   - POST /courses → add new course.
   - PUT /courses/:id → update course.
   - DELETE /courses/:id → delete course.
 
 - Schedules
-
   - GET /courses/:id/schedules → list schedules for course.
   - POST /courses/:id/schedules → add schedule.
   - DELETE /schedules/:id → delete schedule.
 
 - Assessments
-
   - GET /courses/:id/assessments → list assessments.
   - POST /courses/:id/assessments → add assessment.
   - DELETE /assessments/:id → delete assessment.
