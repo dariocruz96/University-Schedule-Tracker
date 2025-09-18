@@ -14,7 +14,7 @@ My starting idea is to use some tools I'm confortable with:
 - Backend (Node.js/Express).
 - Database (SQLite or Postgres).
 
-# Requirements
+# Requirement
 ## Must Have
 - Ability to add, edit, and delete courses (name, code, credits).
 - Ability to add, edit, and delete class schedules (day, time, location, linked to a course).
