@@ -44,7 +44,7 @@ app.get("/", (req, res) => {
 });
 
 // ----------------------
-// CRUD Routes (Users, Courses, Class Schedules, Assessments)
+// CRUD Routes (Users, Modules, Class Schedules, Assessments)
 // ----------------------
 
 // ----------------------
@@ -99,7 +99,7 @@ fetch('http://localhost:8000/api/users/1', {
 app.put("/api/users/:id", (req, res) => {
   const { email, password_hash } = req.body;
   db.run(
-    "UPDATE users SET email = ?, password_hash = ? WHERE id = ?",
+    "UPDATE users SET email = COALESCE(?, email), password_hash = COALESCE(?, password_hash) WHERE id = ?",
     [email, password_hash, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -122,25 +122,25 @@ app.delete("/api/users/:id", (req, res) => {
 });
 
 // ----------------------
-// COURSES
+// MODULES
 // ----------------------
 
-// GET all courses → frontend example:
+// GET all modules → frontend example:
 /*
-fetch('http://localhost:8000/api/courses')
+fetch('http://localhost:8000/api/modules')
   .then(res => res.json())
-  .then(courses => console.log(courses));
+  .then(modules => console.log(modules));
 */
-app.get("/api/courses", (req, res) => {
-  db.all("SELECT * FROM courses", [], (err, rows) => {
+app.get("/api/modules", (req, res) => {
+  db.all("SELECT * FROM modules", [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
 
-// POST a new course → frontend example:
+// POST a new module → frontend example:
 /*
-fetch('http://localhost:8000/api/courses', {
+fetch('http://localhost:8000/api/modules', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ name: 'Math', code: 'MATH101', credits: 3, user_id: 1 })
@@ -148,10 +148,10 @@ fetch('http://localhost:8000/api/courses', {
 .then(res => res.json())
 .then(data => console.log(data));
 */
-app.post("/api/courses", (req, res) => {
+app.post("/api/modules", (req, res) => {
   const { name, code, credits, user_id } = req.body;
   db.run(
-    "INSERT INTO courses (name, code, credits, user_id) VALUES (?, ?, ?, ?)",
+    "INSERT INTO modules (name, code, credits, user_id) VALUES (?, ?, ?, ?)",
     [name, code, credits, user_id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -160,9 +160,9 @@ app.post("/api/courses", (req, res) => {
   );
 });
 
-// PUT update a course by ID → frontend example:
+// PUT update a module by ID → frontend example:
 /*
-fetch('http://localhost:8000/api/courses/1', {
+fetch('http://localhost:8000/api/modules/1', {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ name: 'Physics', code: 'PHYS101', credits: 4, user_id: 1 })
@@ -170,10 +170,10 @@ fetch('http://localhost:8000/api/courses/1', {
 .then(res => res.json())
 .then(data => console.log(data));
 */
-app.put("/api/courses/:id", (req, res) => {
+app.put("/api/modules/:id", (req, res) => {
   const { name, code, credits, user_id } = req.body;
   db.run(
-    "UPDATE courses SET name = ?, code = ?, credits = ?, user_id = ? WHERE id = ?",
+    "UPDATE modules SET name = COALESCE(?, name), code = COALESCE(?, code), credits = COALESCE(?, credits), user_id = COALESCE(?, user_id) WHERE id = ?",
     [name, code, credits, user_id, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -182,14 +182,14 @@ app.put("/api/courses/:id", (req, res) => {
   );
 });
 
-// DELETE a course by ID → frontend example:
+// DELETE a module by ID → frontend example:
 /*
-fetch('http://localhost:8000/api/courses/1', { method: 'DELETE' })
+fetch('http://localhost:8000/api/modules/1', { method: 'DELETE' })
   .then(res => res.json())
   .then(data => console.log(data));
 */
-app.delete("/api/courses/:id", (req, res) => {
-  db.run("DELETE FROM courses WHERE id = ?", [req.params.id], function (err) {
+app.delete("/api/modules/:id", (req, res) => {
+  db.run("DELETE FROM modules WHERE id = ?", [req.params.id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ changes: this.changes });
   });
@@ -217,16 +217,16 @@ app.get("/api/class_schedules", (req, res) => {
 fetch('http://localhost:8000/api/class_schedules', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ day_of_week: 'Monday', start_time: '09:00', end_time: '10:30', location: 'Room 101', course_id: 1 })
+  body: JSON.stringify({ day_of_week: 'Monday', start_time: '09:00', end_time: '10:30', location: 'Room 101', module_id: 1 })
 })
 .then(res => res.json())
 .then(data => console.log(data));
 */
 app.post("/api/class_schedules", (req, res) => {
-  const { day_of_week, start_time, end_time, location, course_id } = req.body;
+  const { day_of_week, start_time, end_time, location, module_id } = req.body;
   db.run(
-    "INSERT INTO class_schedules (day_of_week, start_time, end_time, location, course_id) VALUES (?, ?, ?, ?, ?)",
-    [day_of_week, start_time, end_time, location, course_id],
+    "INSERT INTO class_schedules (day_of_week, start_time, end_time, location, module_id) VALUES (?, ?, ?, ?, ?)",
+    [day_of_week, start_time, end_time, location, module_id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
@@ -239,16 +239,17 @@ app.post("/api/class_schedules", (req, res) => {
 fetch('http://localhost:8000/api/class_schedules/1', {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ day_of_week: 'Tuesday', start_time: '10:00', end_time: '11:30', location: 'Room 102', course_id: 1 })
+  body: JSON.stringify({ day_of_week: 'Tuesday', start_time: '10:00', end_time: '11:30', location: 'Room 102', module_id: 1 })
 })
 .then(res => res.json())
 .then(data => console.log(data));
 */
 app.put("/api/class_schedules/:id", (req, res) => {
-  const { day_of_week, start_time, end_time, location, course_id } = req.body;
+  const { day_of_week, start_time, end_time, location, module_id } = req.body;
   db.run(
-    "UPDATE class_schedules SET day_of_week = ?, start_time = ?, end_time = ?, location = ?, course_id = ? WHERE id = ?",
-    [day_of_week, start_time, end_time, location, course_id, req.params.id],
+    "UPDATE class_schedules SET day_of_week = COALESCE(?, day_of_week), start_time  = COALESCE(?, start_time), end_time    = COALESCE(?, end_time), "+
+    " location = COALESCE(?, location),    module_id   = COALESCE(?, module_id) WHERE id = ?",
+    [day_of_week, start_time, end_time, location, module_id, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ changes: this.changes });
@@ -295,16 +296,16 @@ app.get("/api/assessments", (req, res) => {
 fetch('http://localhost:8000/api/assessments', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ title: 'Exam 1', type: 'Exam', due_date: '2025-09-30', course_id: 1 })
+  body: JSON.stringify({ title: 'Exam 1', type: 'Exam', due_date: '2025-09-30', module_id: 1 })
 })
 .then(res => res.json())
 .then(data => console.log(data));
 */
 app.post("/api/assessments", (req, res) => {
-  const { title, type, due_date, course_id } = req.body;
+  const { title, type, due_date, module_id } = req.body;
   db.run(
-    "INSERT INTO assessments (title, type, due_date, course_id) VALUES (?, ?, ?, ?)",
-    [title, type, due_date, course_id],
+    "INSERT INTO assessments (title, type, due_date, module_id) VALUES (?, ?, ?, ?)",
+    [title, type, due_date, module_id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
@@ -317,16 +318,16 @@ app.post("/api/assessments", (req, res) => {
 fetch('http://localhost:8000/api/assessments/1', {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ title: 'Exam 1 Updated', type: 'Exam', due_date: '2025-10-01', course_id: 1 })
+  body: JSON.stringify({ title: 'Exam 1 Updated', type: 'Exam', due_date: '2025-10-01', module_id: 1 })
 })
 .then(res => res.json())
 .then(data => console.log(data));
 */
 app.put("/api/assessments/:id", (req, res) => {
-  const { title, type, due_date, course_id } = req.body;
+  const { title, type, due_date, module_id } = req.body;
   db.run(
-    "UPDATE assessments SET title = ?, type = ?, due_date = ?, course_id = ? WHERE id = ?",
-    [title, type, due_date, course_id, req.params.id],
+    "UPDATE assessments SET title     = COALESCE(?, title), type = COALESCE(?, type), due_date  = COALESCE(?, due_date), module_id = COALESCE(?, module_id) WHERE id = ?",
+    [title, type, due_date, module_id, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ changes: this.changes });

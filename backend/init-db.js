@@ -11,7 +11,7 @@ db.serialize(() => {
   `);
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS courses (
+    CREATE TABLE IF NOT EXISTS modules (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       code TEXT NOT NULL,
@@ -28,8 +28,8 @@ db.serialize(() => {
       start_time TEXT NOT NULL,
       end_time TEXT NOT NULL,
       location TEXT,
-      course_id INTEGER,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+      module_id INTEGER,
+      FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
     )
   `);
 
@@ -39,8 +39,8 @@ db.serialize(() => {
       title TEXT NOT NULL,
       type TEXT NOT NULL,
       due_date TEXT NOT NULL,
-      course_id INTEGER,
-      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+      module_id INTEGER,
+      FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE
     )
   `);
 });
