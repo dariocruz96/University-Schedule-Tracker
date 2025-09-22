@@ -4,9 +4,26 @@ const db = new sqlite3.Database("./db.sqlite");
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    middle_names TEXT,
+    last_name TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL, -- stored as YYYY-MM-DD
+    address TEXT,
+    course_id INTEGER,
+    FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
+  )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL
+      name TEXT NOT NULL,
+      type TEXT NOT NULL,
+      user_id INTEGER,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
 
@@ -16,8 +33,8 @@ db.serialize(() => {
       name TEXT NOT NULL,
       code TEXT NOT NULL,
       credits INTEGER,
-      user_id INTEGER,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      course_id INTEGER,
+      FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
     )
   `);
 

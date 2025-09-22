@@ -1,10 +1,10 @@
 // ----------------------
 // Import required modules
 // ----------------------
-const express = require("express");            // Express → helps create HTTP API routes easily
-const cors = require("cors");                  // CORS → allows frontend (different origin) to call backend
-const sqlite3 = require("sqlite3").verbose();  // SQLite3 driver for Node.js (verbose gives debug info)
-const path = require("path");                  // Path → helps handle file paths across OS
+const express = require("express"); // Express → helps create HTTP API routes easily
+const cors = require("cors"); // CORS → allows frontend (different origin) to call backend
+const sqlite3 = require("sqlite3").verbose(); // SQLite3 driver for Node.js (verbose gives debug info)
+const path = require("path"); // Path → helps handle file paths across OS
 
 // ----------------------
 // Initialize Express app
@@ -15,8 +15,8 @@ const PORT = 8000; // Port where backend will run
 // ----------------------
 // Middleware
 // ----------------------
-app.use(cors());               // Enable CORS → frontend can call backend from browser
-app.use(express.json());       // Parse incoming JSON in request body
+app.use(cors()); // Enable CORS → frontend can call backend from browser
+app.use(express.json()); // Parse incoming JSON in request body
 app.use(express.static(path.join(__dirname, "../frontend"))); // Serve static frontend files
 
 // ----------------------
@@ -58,7 +58,15 @@ fetch('http://localhost:8000/api/users')
   .then(users => console.log(users));
 */
 app.get("/api/users", (req, res) => {
-  db.all("SELECT * FROM users", [], (err, rows) => {
+  const sql = `
+    SELECT u.id, u.email, u.password_hash,
+           u.first_name, u.middle_names, u.last_name,
+           u.date_of_birth, u.address,
+           u.course_id, c.name AS course_name
+    FROM users u
+    LEFT JOIN courses c ON u.course_id = c.id
+  `;
+  db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -75,10 +83,29 @@ fetch('http://localhost:8000/api/users', {
 .then(data => console.log(data));
 */
 app.post("/api/users", (req, res) => {
-  const { email, password_hash } = req.body;
+  const {
+    email,
+    password_hash,
+    first_name,
+    middle_names,
+    last_name,
+    date_of_birth,
+    address,
+    course_id,
+  } = req.body;
   db.run(
-    "INSERT INTO users (email, password_hash) VALUES (?, ?)",
-    [email, password_hash],
+    `INSERT INTO users (email, password_hash, first_name, middle_names, last_name, date_of_birth, address, course_id)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      email,
+      password_hash,
+      first_name,
+      middle_names,
+      last_name,
+      date_of_birth,
+      address,
+      course_id || null,
+    ],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
@@ -97,10 +124,44 @@ fetch('http://localhost:8000/api/users/1', {
 .then(data => console.log(data));
 */
 app.put("/api/users/:id", (req, res) => {
-  const { email, password_hash } = req.body;
+  const {
+    email,
+    password_hash,
+    first_name,
+    middle_names,
+    last_name,
+    date_of_birth,
+    address,
+    course_id,
+  } = req.body;
+
+  const sql = `
+    UPDATE users
+    SET
+      email = COALESCE(?, email),
+      password_hash = COALESCE(?, password_hash),
+      first_name = COALESCE(?, first_name),
+      middle_names = COALESCE(?, middle_names),
+      last_name = COALESCE(?, last_name),
+      date_of_birth = COALESCE(?, date_of_birth),
+      address = COALESCE(?, address),
+      course_id = COALESCE(?, course_id)
+    WHERE id = ?
+  `;
+
   db.run(
-    "UPDATE users SET email = COALESCE(?, email), password_hash = COALESCE(?, password_hash) WHERE id = ?",
-    [email, password_hash, req.params.id],
+    sql,
+    [
+      email,
+      password_hash,
+      first_name,
+      middle_names,
+      last_name,
+      date_of_birth,
+      address,
+      course_id,
+      req.params.id,
+    ],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ changes: this.changes });
@@ -122,6 +183,80 @@ app.delete("/api/users/:id", (req, res) => {
 });
 
 // ----------------------
+// COURSES
+// ----------------------
+
+// GET all courses → frontend example:
+/*
+fetch('http://localhost:8000/api/courses')
+  .then(res => res.json())
+  .then(courses => console.log(courses));
+*/
+app.get("/api/courses", (req, res) => {
+  db.all("SELECT * FROM courses", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
+// POST a new course → frontend example:
+/*
+fetch('http://localhost:8000/api/courses', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Software Engineering', Type 'Bachelor of Science (BSc)' })
+})
+.then(res => res.json())
+.then(data => console.log(data));
+*/
+app.post("/api/courses", (req, res) => {
+  const { name, type } = req.body;
+  db.run(
+    "INSERT INTO courses (name, type) VALUES (?, ?)",
+    [name, type],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ id: this.lastID });
+    }
+  );
+});
+
+// PUT update a course by ID → frontend example:
+/*
+fetch('http://localhost:8000/api/courses/1', {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'Software Engineering', Type 'Bachelor of Science (BSc)' })
+})
+.then(res => res.json())
+.then(data => console.log(data));
+*/
+app.put("/api/courses/:id", (req, res) => {
+  const { name, type } = req.body;
+  db.run(
+    "UPDATE courses SET name = COALESCE(?, name), type = COALESCE(?, type) WHERE id = ?",
+    [name, type, req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ changes: this.changes });
+    }
+  );
+});
+
+// DELETE a course by ID → frontend example:
+/*
+fetch('http://localhost:8000/api/courses/1', { method: 'DELETE' })
+  .then(res => res.json())
+  .then(data => console.log(data));
+*/
+app.delete("/api/courses/:id", (req, res) => {
+  db.run("DELETE FROM courses WHERE id = ?", [req.params.id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ changes: this.changes });
+  });
+});
+
+// ----------------------
 // MODULES
 // ----------------------
 
@@ -132,8 +267,16 @@ fetch('http://localhost:8000/api/modules')
   .then(modules => console.log(modules));
 */
 app.get("/api/modules", (req, res) => {
-  db.all("SELECT * FROM modules", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
+  const sql = `
+    SELECT m.id, m.name, m.code, m.credits, m.course_id, c.name AS course_name
+    FROM modules m
+    LEFT JOIN courses c ON m.course_id = c.id
+  `;
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: err.message });
+    }
     res.json(rows);
   });
 });
@@ -149,10 +292,10 @@ fetch('http://localhost:8000/api/modules', {
 .then(data => console.log(data));
 */
 app.post("/api/modules", (req, res) => {
-  const { name, code, credits, user_id } = req.body;
+  const { name, code, credits, course_id } = req.body;
   db.run(
-    "INSERT INTO modules (name, code, credits, user_id) VALUES (?, ?, ?, ?)",
-    [name, code, credits, user_id],
+    "INSERT INTO modules (name, code, credits, course_id) VALUES (?, ?, ?, ?)",
+    [name, code, credits, course_id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ id: this.lastID });
@@ -165,16 +308,16 @@ app.post("/api/modules", (req, res) => {
 fetch('http://localhost:8000/api/modules/1', {
   method: 'PUT',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name: 'Physics', code: 'PHYS101', credits: 4, user_id: 1 })
+  body: JSON.stringify({ name: 'Physics', code: 'PHYS101', credits: 4, course_id: 1 })
 })
 .then(res => res.json())
 .then(data => console.log(data));
 */
 app.put("/api/modules/:id", (req, res) => {
-  const { name, code, credits, user_id } = req.body;
+  const { name, code, credits, course_id } = req.body;
   db.run(
-    "UPDATE modules SET name = COALESCE(?, name), code = COALESCE(?, code), credits = COALESCE(?, credits), user_id = COALESCE(?, user_id) WHERE id = ?",
-    [name, code, credits, user_id, req.params.id],
+    "UPDATE modules SET name = COALESCE(?, name), code = COALESCE(?, code), credits = COALESCE(?, credits), course_id = COALESCE(?, course_id) WHERE id = ?",
+    [name, code, credits, course_id, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ changes: this.changes });
@@ -206,7 +349,13 @@ fetch('http://localhost:8000/api/class_schedules')
   .then(data => console.log(data));
 */
 app.get("/api/class_schedules", (req, res) => {
-  db.all("SELECT * FROM class_schedules", [], (err, rows) => {
+  const sql = `
+    SELECT cs.id, cs.day_of_week, cs.start_time, cs.end_time, cs.location,
+           cs.module_id, m.name AS module_name
+    FROM class_schedules cs
+    LEFT JOIN modules m ON cs.module_id = m.id
+  `;
+  db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -247,8 +396,8 @@ fetch('http://localhost:8000/api/class_schedules/1', {
 app.put("/api/class_schedules/:id", (req, res) => {
   const { day_of_week, start_time, end_time, location, module_id } = req.body;
   db.run(
-    "UPDATE class_schedules SET day_of_week = COALESCE(?, day_of_week), start_time  = COALESCE(?, start_time), end_time    = COALESCE(?, end_time), "+
-    " location = COALESCE(?, location),    module_id   = COALESCE(?, module_id) WHERE id = ?",
+    "UPDATE class_schedules SET day_of_week = COALESCE(?, day_of_week), start_time  = COALESCE(?, start_time), end_time    = COALESCE(?, end_time), " +
+      " location = COALESCE(?, location),    module_id   = COALESCE(?, module_id) WHERE id = ?",
     [day_of_week, start_time, end_time, location, module_id, req.params.id],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
@@ -285,7 +434,12 @@ fetch('http://localhost:8000/api/assessments')
   .then(data => console.log(data));
 */
 app.get("/api/assessments", (req, res) => {
-  db.all("SELECT * FROM assessments", [], (err, rows) => {
+  const sql = `
+    SELECT a.id, a.title, a.type, a.due_date, a.module_id, m.name AS module_name
+    FROM assessments a
+    LEFT JOIN modules m ON a.module_id = m.id
+  `;
+  db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
@@ -342,10 +496,14 @@ fetch('http://localhost:8000/api/assessments/1', { method: 'DELETE' })
   .then(data => console.log(data));
 */
 app.delete("/api/assessments/:id", (req, res) => {
-  db.run("DELETE FROM assessments WHERE id = ?", [req.params.id], function (err) {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ changes: this.changes });
-  });
+  db.run(
+    "DELETE FROM assessments WHERE id = ?",
+    [req.params.id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ changes: this.changes });
+    }
+  );
 });
 
 // ----------------------
